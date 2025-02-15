@@ -6,21 +6,24 @@ import (
 	"github.com/ashabykov/geospatial_cache_for_meetup/location"
 )
 
+// use as geospatial index
 type geospatial interface {
 	Add(location location.Location)
-	Remove(location location.Location)
 	Nearby(target location.Location, radius float64, limit int) []location.Name
+	Remove(location location.Location)
 }
 
+// use as sorted timestamp index
 type timestamp interface {
 	Add(location location.Location)
 	Read(from, to location.Timestamp) []location.Name
 	Remove(location location.Location)
 }
 
+// use as in-memory key/val storage
 type cache interface {
-	Get(string) (location.Location, bool)
 	Set(string, location.Location, time.Duration) bool
+	Get(string) (location.Location, bool)
 	Del(string)
 }
 
