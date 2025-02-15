@@ -45,7 +45,7 @@ func (c *Cache) Near(target location.Location, radius float64, limit int) []loca
 
 	loc2 := c.geospatial.Nearby(target, radius, limit)
 
-	if len(loc1) == 0 || len(loc2) == 0 {
+	if len(loc1) == 0 && len(loc2) == 0 {
 		return []location.Location{}
 	}
 

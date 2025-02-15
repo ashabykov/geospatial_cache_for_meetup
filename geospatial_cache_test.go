@@ -12,6 +12,72 @@ import (
 	"github.com/ashabykov/geospatial_cache_for_meetup/sorted_set"
 )
 
+func TestCache_Del(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		name      string
+		radius    float64
+		limit     int
+		locations []location.Location
+		target    location.Location
+	}{
+		{
+			name:   "success",
+			radius: 10,
+			limit:  10,
+			target: location.Location{
+				Name: "awesome-1-near",
+				Ts:   newTimestamp(now, -3*time.Minute),
+				TTL:  15 * time.Minute,
+				Lat:  43.241705,
+				Lon:  76.909756,
+			},
+			locations: []location.Location{
+				{
+					Name: "awesome-1-near",
+					Ts:   newTimestamp(now, -3*time.Minute),
+					TTL:  15 * time.Minute,
+					Lat:  43.241705,
+					Lon:  76.909756,
+				},
+				{
+					Name: "awesome-2-far",
+					Ts:   newTimestamp(now, -3*time.Minute),
+					TTL:  15 * time.Minute,
+					Lat:  43.248489,
+					Lon:  76.923511,
+				},
+				{
+					Name: "awesome-3-near",
+					Ts:   newTimestamp(now, -3*time.Minute),
+					TTL:  15 * time.Minute,
+					Lat:  43.246410,
+					Lon:  76.916558,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			idx := New(rtree_index.NewIndex(), sorted_set.New(), lru_cache.New(tt.target.TTL))
+
+			for i := range tt.locations {
+				idx.Set(tt.locations[i])
+			}
+
+			// testing method
+			idx.Del(tt.target)
+
+			// check deleted
+			got, exist := idx.Get(tt.target.Name)
+			assert.Equal(t, location.Location{}, got)
+			assert.False(t, exist)
+			assert.Equal(t, 0, len(idx.Near(tt.target, tt.radius, tt.limit)))
+		})
+	}
+}
+
 func TestCache_Near(t *testing.T) {
 	now := time.Now()
 	tests := []struct {
