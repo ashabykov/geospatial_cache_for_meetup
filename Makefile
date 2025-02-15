@@ -15,8 +15,8 @@ test:
 
 .PHONY: up
 up:
-	docker-compose -f docker-compose.yml up -d --build
+	docker-compose up -d --build
 
 .PHONY: down
 down:
-	docker-compose -f docker-compose.yml down
+	docker-compose down
