@@ -1,6 +1,7 @@
 package geospatial_cache
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -60,7 +61,12 @@ func TestCache_Del(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			idx := New(rtree_index.NewIndex(), sorted_set.New(), lru_cache.New(tt.target.TTL, 10000))
+			idx := New(
+				context.Background(),
+				rtree_index.NewIndex(),
+				sorted_set.New(),
+				lru_cache.New(tt.target.TTL, 10000),
+			)
 
 			for i := range tt.locations {
 				idx.Set(tt.locations[i])
@@ -209,7 +215,12 @@ func TestCache_Near(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			idx := New(rtree_index.NewIndex(), sorted_set.New(), lru_cache.New(tt.target.TTL, 10000))
+			idx := New(
+				context.Background(),
+				rtree_index.NewIndex(),
+				sorted_set.New(),
+				lru_cache.New(tt.target.TTL, 10000),
+			)
 
 			for i := range tt.locations {
 				idx.Set(tt.locations[i])

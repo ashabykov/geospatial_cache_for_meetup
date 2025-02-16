@@ -49,7 +49,11 @@ func (s *Subscriber) Subscribe(ctx context.Context) (<-chan location.Location, e
 	}
 
 	results := make(chan location.Location, defaultResultsBufferSize)
+
 	ticker := time.NewTicker(s.timeout)
+
+	defer ticker.Stop()
+
 	for partition := range s.partitions {
 		go func(ctx context.Context, partition int) {
 			for {

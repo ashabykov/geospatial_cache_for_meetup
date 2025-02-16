@@ -1,6 +1,8 @@
 package geospatial_cache
 
 import (
+	"context"
+	"fmt"
 	"time"
 
 	"github.com/ashabykov/geospatial_cache_for_meetup/location"
@@ -28,13 +30,52 @@ type cache interface {
 }
 
 type Cache struct {
-	geospatial geospatial
-	timestamp  timestamp
-	cache      cache
+	geospatial   geospatial
+	timestamp    timestamp
+	cache        cache
+	cleanTimeout time.Duration
+	cleanPeriod  time.Duration
 }
 
-func New(g geospatial, t timestamp, c cache) *Cache {
-	return &Cache{cache: c, geospatial: g, timestamp: t}
+func New(ctx context.Context, g geospatial, t timestamp, c cache) *Cache {
+	ccc := &Cache{
+		cache:        c,
+		geospatial:   g,
+		timestamp:    t,
+		cleanTimeout: 1 * time.Second,
+		cleanPeriod:  5 * time.Minute,
+	}
+
+	go ccc.clean(ctx)
+
+	return ccc
+}
+
+func (c *Cache) clean(ctx context.Context) {
+
+	ticker := time.NewTicker(c.cleanTimeout)
+
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			var (
+				from = location.Timestamp(0)
+				to   = location.Timestamp(time.Now().Add(-c.cleanPeriod).Unix())
+			)
+			for _, name := range c.timestamp.Read(from, to) {
+				if loc, ok := c.cache.Get(name.String()); ok {
+
+					c.Del(loc)
+
+					fmt.Println("Removed from cache: ", loc)
+				}
+			}
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
 func (c *Cache) Near(target location.Location, radius float64, limit int) []location.Location {

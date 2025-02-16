@@ -40,6 +40,7 @@ func BenchmarkClientNear_for_FunOutWrite(b *testing.B) {
 			timeOffset,
 		)
 		geo = geospatial_cache.New(
+			ctx,
 			rtree_index.NewIndex(),
 			sorted_set.New(),
 			lru_cache.New(ttl, capacity),
