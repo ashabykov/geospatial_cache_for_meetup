@@ -20,6 +20,6 @@ func randDist(radius float64) float64 {
 	return math.Sqrt(rand.Float64()) * radius
 }
 
-func Generate(center Location, radius float64) Location {
+func Generate(center Location, radius float64) (Location, float64) {
 	return pointAtDistance(center, randDist(radius), ts(), name())
 }

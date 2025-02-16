@@ -56,6 +56,7 @@ func (s *Subscriber) Subscribe(ctx context.Context) (<-chan location.Location, e
 				select {
 
 				case <-ticker.C:
+
 					message, err := s.partitions[partition].ReadMessage(ctx)
 					if err != nil {
 

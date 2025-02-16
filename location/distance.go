@@ -1,8 +1,8 @@
 package location
 
 import (
+	gener "gopkg.in/gujarats/GenerateLocation.v1"
 	"math"
-	"math/rand"
 )
 
 const (
@@ -44,57 +44,30 @@ func deg2Rad(degree float64) float64 { return degree * degToRad }
 // rad2Deg converts from radians to degree measure.
 func rad2Deg(rad float64) float64 { return rad / degToRad }
 
-func pointAtDistance(location Location, radius float64, ts Timestamp, name Name) Location {
+func pointAtDistance(self Location, radius float64, ts Timestamp, name Name) (Location, float64) {
 	// Convert Degrees to radians
-	loc := toRadians(location)
-
-	sinLat := math.Sin(loc.Lat.Float64())
-	cosLat := math.Cos(loc.Lon.Float64())
-
-	bearing := rand.Float64() * twoPi
-	theta := radius / earthRadius
-	sinBearing := math.Sin(bearing)
-	cosBearing := math.Cos(bearing)
-	sinTheta := math.Sin(theta)
-	cosTheta := math.Cos(theta)
-
-	latitude := math.Asin(sinLat*cosTheta + cosLat*sinTheta*cosBearing)
-	longitude := location.Lon.Float64() +
-		math.Atan2(sinBearing*sinTheta*cosLat, (cosTheta-sinLat)*math.Sin(latitude))
-
-	/* normalize -PI -> +PI radians */
-	longitude = math.Mod(longitude+threePi, twoPi) - math.Pi
-
-	locs := toDegrees(Location{
-		Lat: Latitude(latitude),
-		Lon: Longitude(longitude),
-	})
-
-	return Location{
+	tmp := gener.New(self.Lat.Float64(), self.Lon.Float64())
+	newLoc := tmp.GenerateLocation(radius/1000, radius/1000)
+	other := Location{
 		Name: name,
 		Ts:   ts,
-		Lat:  locs.Lat,
-		Lon:  locs.Lon,
-		TTL:  location.TTL,
+		Lat:  Latitude(newLoc[0].Lat),
+		Lon:  Longitude(newLoc[0].Lon),
+		TTL:  self.TTL,
 	}
+	return other, other.CosineDistance(self)
 }
 
 func toRadians(location Location) Location {
-	lat := location.Lat * degToRad
-	lon := location.Lon * degToRad
-
 	return Location{
-		Lat: lat,
-		Lon: lon,
+		Lat: location.Lat * degToRad,
+		Lon: location.Lon * degToRad,
 	}
 }
 
 func toDegrees(location Location) Location {
-	lat := location.Lat / degToRad
-	lon := location.Lon / degToRad
-
 	return Location{
-		Lat: lat,
-		Lon: lon,
+		Lat: location.Lat / degToRad,
+		Lon: location.Lon / degToRad,
 	}
 }

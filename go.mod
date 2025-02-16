@@ -23,5 +23,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/tidwall/geoindex v1.7.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
+	gopkg.in/gujarats/GenerateLocation.v1 v1.0.0-20170507095030-e4a39f58a3d7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

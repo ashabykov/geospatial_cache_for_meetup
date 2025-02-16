@@ -9,6 +9,7 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"github.com/ashabykov/geospatial_cache_for_meetup/cmd"
 	"github.com/ashabykov/geospatial_cache_for_meetup/kafka_broadcaster"
 	"github.com/ashabykov/geospatial_cache_for_meetup/location"
 )
@@ -20,7 +21,7 @@ func main() {
 	}
 
 	var (
-		ctx   = context.Background()
+		ctx   = cmd.WithContext(context.Background())
 		addr  = os.Getenv("addr")
 		topic = os.Getenv("topic")
 		rps   = 30
@@ -34,15 +35,19 @@ func main() {
 	}()
 
 	var (
+
 		//
-		count  = 1000
-		radius = float64(8000)
+		count  = 100
+		radius = float64(5000)
 		target = location.Location{
-			Lat: 43.244555,
-			Lon: 76.940012,
-			TTL: 10 * time.Minute,
+			Name: "target",
+			Lat:  43.244555,
+			Lon:  76.940012,
+			Ts:   location.Timestamp(time.Now().Unix()),
+			TTL:  10 * time.Minute,
 		}
 	)
+
 	if err := pub.Publish(ctx, locations(count, radius, target)...); err != nil {
 		fmt.Println("Publish err:", err, "\n")
 	}
@@ -53,7 +58,7 @@ func main() {
 func locations(count int, radius float64, center location.Location) []location.Location {
 	msgs := make([]location.Location, 0, count)
 	for i := 0; i < count; i++ {
-		loc := location.Generate(
+		loc, _ := location.Generate(
 			center,
 			radius,
 		)
