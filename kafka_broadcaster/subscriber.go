@@ -38,7 +38,7 @@ func NewSubscriber(
 	return &Subscriber{
 		partitions: partitions,
 		timeOffset: timeOffset,
-		timeout:    1 * time.Millisecond,
+		timeout:    time.Nanosecond,
 		bufferSize: defaultResultsBufferSize,
 	}
 }

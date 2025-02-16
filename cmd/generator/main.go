@@ -24,7 +24,7 @@ func main() {
 		ctx   = cmd.WithContext(context.Background())
 		addr  = os.Getenv("addr")
 		topic = os.Getenv("topic")
-		rps   = 30
+		rps   = 1000
 		pub   = kafka_broadcaster.NewPublisher([]string{addr}, topic, rps)
 	)
 
@@ -37,7 +37,7 @@ func main() {
 	var (
 
 		//
-		count  = 100
+		count  = 10000
 		radius = float64(5000)
 		target = location.Location{
 			Name: "target",

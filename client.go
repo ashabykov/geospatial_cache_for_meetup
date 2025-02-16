@@ -42,7 +42,6 @@ func (cl *Client) Subscribe(ctx context.Context) {
 
 	for result := range results {
 		cl.geospatial.Set(result)
-		fmt.Println("Client Subscriber set:", result)
 	}
 }
 
