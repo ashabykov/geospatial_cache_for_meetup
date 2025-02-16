@@ -10,7 +10,6 @@ import (
 type (
 	subscriber interface {
 		Subscribe(ctx context.Context) (<-chan location.Location, error)
-		Close() error
 	}
 
 	geospatial interface {
@@ -18,19 +17,16 @@ type (
 		Set(target location.Location)
 	}
 
-	// Client provides
 	Client struct {
 		subscriber subscriber
 		geospatial geospatial
 	}
 )
 
-// Near provides
 func (cl *Client) Near(target location.Location, radius float64, limit int) []location.Location {
 	return cl.geospatial.Near(target, radius, limit)
 }
 
-// Subscribe provides
 func (cl *Client) Subscribe(ctx context.Context) {
 	results, err := cl.subscriber.Subscribe(ctx)
 	if err != nil {

@@ -66,7 +66,7 @@ func BenchmarkClientNear_for_FunOutWrite(b *testing.B) {
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			client.Near(target, radius, limit)
+			println(len(client.Near(target, radius, limit)))
 		}
 	})
 }
