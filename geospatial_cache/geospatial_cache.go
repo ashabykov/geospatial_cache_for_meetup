@@ -86,15 +86,15 @@ func (c *Cache) get(names ...location.Name) []location.Location {
 	return ret
 }
 
-func intersect(self, other []location.Name) []location.Name {
+func intersect(shortest, longest []location.Name) []location.Name {
 
-	hs := make(map[location.Name]struct{}, len(self))
-	for _, name := range self {
+	hs := make(map[location.Name]struct{}, len(shortest))
+	for _, name := range shortest {
 		hs[name] = struct{}{}
 	}
 
-	ret := make([]location.Name, 0, len(self))
-	for _, name := range other {
+	ret := make([]location.Name, 0, len(shortest))
+	for _, name := range longest {
 		if _, ok := hs[name]; ok {
 			ret = append(ret, name)
 		}
