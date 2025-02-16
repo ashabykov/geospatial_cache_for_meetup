@@ -11,14 +11,18 @@ import (
 )
 
 const (
-	capacity = 100000
+	defaultCapacity = 100000
 )
 
 type Cache struct {
 	base *expirable.LRU[string, location.Location]
 }
 
-func New(ttl time.Duration) *Cache {
+func New(ttl time.Duration, capacity int) *Cache {
+	if capacity == 0 {
+		capacity = defaultCapacity
+	}
+
 	return &Cache{
 		base: expirable.NewLRU[string, location.Location](capacity, nil, ttl),
 	}

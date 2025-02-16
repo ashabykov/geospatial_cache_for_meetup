@@ -5,18 +5,20 @@ export GOPROXY=direct
 
 .PHONY: deps
 deps:
-	@echo 'install dependencies'
 	go mod tidy -v
-
 
 .PHONY: test
 test:
 	go test -v -short ./...
 
+.PHONY: colima-start
+colima-start:
+	colima start --vm-type vz --mount-type virtiofs --cpu 4 --memory 8
+
 .PHONY: up
 up:
-	docker-compose up -d --build
+	docker-compose -f ./docker-compose.yaml up -d --build
 
 .PHONY: down
 down:
-	docker-compose down
+	docker-compose -f ./docker-compose.yaml down

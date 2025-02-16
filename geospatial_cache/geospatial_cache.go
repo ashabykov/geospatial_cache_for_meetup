@@ -1,4 +1,4 @@
-package geospatial_cache_for_meetup
+package geospatial_cache
 
 import (
 	"time"
@@ -48,7 +48,7 @@ func (c *Cache) Near(target location.Location, radius float64, limit int) []loca
 
 	loc2 := c.geospatial.Nearby(target, radius, limit)
 
-	if len(loc1) == 0 && len(loc2) == 0 {
+	if len(loc1) == 0 || len(loc2) == 0 {
 		return []location.Location{}
 	}
 
@@ -64,9 +64,9 @@ func (c *Cache) Get(name location.Name) (location.Location, bool) {
 }
 
 func (c *Cache) Set(target location.Location) {
-	c.geospatial.Add(target)
-	c.timestamp.Add(target)
 	c.cache.Set(target.Key(), target, target.TTL)
+	c.timestamp.Add(target)
+	c.geospatial.Add(target)
 }
 
 func (c *Cache) Del(target location.Location) {
