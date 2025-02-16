@@ -16,6 +16,7 @@ const (
 
 type Cache struct {
 	base *expirable.LRU[string, location.Location]
+	ttl  time.Duration
 }
 
 func New(ttl time.Duration, capacity int) *Cache {
@@ -26,6 +27,9 @@ func New(ttl time.Duration, capacity int) *Cache {
 	return &Cache{
 		base: expirable.NewLRU[string, location.Location](capacity, nil, ttl),
 	}
+}
+func (c *Cache) TTL() time.Duration {
+	return c.ttl
 }
 
 func (c *Cache) Get(key string) (location.Location, bool) {

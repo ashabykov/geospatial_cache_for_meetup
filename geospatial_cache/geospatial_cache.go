@@ -27,6 +27,7 @@ type cache interface {
 	Set(string, location.Location, time.Duration) bool
 	Get(string) (location.Location, bool)
 	Del(string)
+	TTL() time.Duration
 }
 
 type Cache struct {
@@ -34,7 +35,7 @@ type Cache struct {
 	timestamp    timestamp
 	cache        cache
 	cleanTimeout time.Duration
-	cleanPeriod  time.Duration
+	cleanRange   time.Duration
 }
 
 func New(ctx context.Context, g geospatial, t timestamp, c cache) *Cache {
@@ -43,7 +44,7 @@ func New(ctx context.Context, g geospatial, t timestamp, c cache) *Cache {
 		geospatial:   g,
 		timestamp:    t,
 		cleanTimeout: 1 * time.Second,
-		cleanPeriod:  5 * time.Minute,
+		cleanRange:   c.TTL(),
 	}
 
 	go ccc.clean(ctx)
@@ -62,7 +63,7 @@ func (c *Cache) clean(ctx context.Context) {
 		case <-ticker.C:
 			var (
 				from = location.Timestamp(0)
-				to   = location.Timestamp(time.Now().Add(-c.cleanPeriod).Unix())
+				to   = location.Timestamp(time.Now().Add(-c.cleanRange).Unix())
 			)
 			for _, name := range c.timestamp.Read(from, to) {
 				if loc, ok := c.cache.Get(name.String()); ok {
