@@ -2,7 +2,8 @@ package kafka_broadcaster
 
 import (
 	"context"
-	"fmt"
+	"log"
+	"sync"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -15,7 +16,7 @@ const (
 )
 
 type Subscriber struct {
-	partitions map[int]*kafka.Reader
+	partitions []*kafka.Reader
 	timeOffset time.Duration
 	timeout    time.Duration
 	bufferSize int
@@ -26,19 +27,20 @@ func NewSubscriber(
 	topic string, partitionsCount int,
 	timeOffset time.Duration,
 ) *Subscriber {
-	partitions := make(map[int]*kafka.Reader, partitionsCount)
+	partitions := make([]*kafka.Reader, partitionsCount)
 	for i := 0; i < partitionsCount; i++ {
 		partitions[i] = kafka.NewReader(kafka.ReaderConfig{
-			Brokers:   hosts,
-			Topic:     topic,
-			Partition: i,
-			MaxBytes:  int(10e6), // 10MB
+			Brokers:          hosts,
+			Topic:            topic,
+			Partition:        i,
+			MaxBytes:         int(10e6), // 10MB
+			ReadBatchTimeout: 100 * time.Millisecond,
 		})
 	}
 	return &Subscriber{
 		partitions: partitions,
 		timeOffset: timeOffset,
-		timeout:    time.Nanosecond,
+		timeout:    10 * time.Millisecond,
 		bufferSize: defaultResultsBufferSize,
 	}
 }
@@ -50,45 +52,52 @@ func (s *Subscriber) Subscribe(ctx context.Context) (<-chan location.Location, e
 
 	results := make(chan location.Location, defaultResultsBufferSize)
 
+	wg := &sync.WaitGroup{}
+	for _, reader := range s.partitions {
+
+		wg.Add(1)
+
+		go s.worker(ctx, results, reader, wg)
+	}
+
+	go func() {
+
+		wg.Wait()
+
+		close(results)
+	}()
+
+	return results, nil
+}
+
+func (s *Subscriber) worker(ctx context.Context, results chan<- location.Location, reader *kafka.Reader, wg *sync.WaitGroup) {
+
+	defer wg.Done()
+
 	ticker := time.NewTicker(s.timeout)
 
 	defer ticker.Stop()
 
-	for partition := range s.partitions {
-		go func(ctx context.Context, partition int) {
-			for {
-				select {
-
-				case <-ticker.C:
-
-					message, err := s.partitions[partition].ReadMessage(ctx)
-					if err != nil {
-
-						fmt.Println("Subscriber: read message error:", err)
-
-						return
-					}
-
-					loc, err := location.Decode(message.Value)
-					if err != nil {
-
-						fmt.Println("Subscriber: decode message error:", err)
-
-						continue
-					}
-
-					results <- loc
-
-				case <-ctx.Done():
-
-					close(results)
-
-					return
-				}
+	for {
+		select {
+		case <-ticker.C:
+			message, err := reader.ReadMessage(ctx)
+			if err != nil {
+				log.Println("Subscriber: read message error:", err)
+				continue
 			}
-		}(ctx, partition)
+
+			loc, err := location.Decode(message.Value)
+			if err != nil {
+				log.Println("Subscriber: decode message error:", err)
+				continue
+			}
+			results <- loc
+
+		case <-ctx.Done():
+			return
+		}
 	}
-	return results, nil
 }
 
 func (s *Subscriber) resetOffset(ctx context.Context) error {

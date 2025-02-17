@@ -43,11 +43,11 @@ func New(ctx context.Context, g geospatial, t timestamp, c cache) *Cache {
 		cache:        c,
 		geospatial:   g,
 		timestamp:    t,
-		cleanTimeout: 1 * time.Second,
+		cleanTimeout: 5 * time.Second,
 		cleanRange:   c.TTL(),
 	}
 
-	go ccc.clean(ctx)
+	//go ccc.clean(ctx)
 
 	return ccc
 }

@@ -27,17 +27,20 @@ func (cl *Client) Near(target location.Location, radius float64, limit int) []lo
 	return cl.geospatial.Near(target, radius, limit)
 }
 
-func (cl *Client) Subscribe(ctx context.Context) {
+func (cl *Client) SubscribeOnUpdates(ctx context.Context) {
 	results, err := cl.subscriber.Subscribe(ctx)
 	if err != nil {
 
-		fmt.Println("Client Subscriber error:", err)
+		fmt.Println("Client subscriber error:", err)
 
 		return
 	}
 
 	for result := range results {
+
 		cl.geospatial.Set(result)
+
+		fmt.Println("Client geospatial set:", result)
 	}
 }
 

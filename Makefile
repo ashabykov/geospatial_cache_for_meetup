@@ -15,6 +15,14 @@ test:
 colima-start:
 	colima start --vm-type vz --mount-type virtiofs --cpu 4 --memory 8
 
+.PHONY: colima-stop
+colima-stop:
+	colima stop
+
+.PHONY: colima-delete
+colima-delete:
+	colima delete
+
 .PHONY: up
 up:
 	docker-compose -f ./docker-compose.yaml up -d --build
