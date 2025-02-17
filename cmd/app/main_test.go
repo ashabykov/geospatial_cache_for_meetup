@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -10,16 +11,24 @@ import (
 	"github.com/ashabykov/geospatial_cache_for_meetup/location"
 )
 
+type nearBy struct {
+	Location location.Location `json:"location"`
+	Radius   float64           `json:"radius"`
+	Limit    int               `json:"limit"`
+}
+
 type tcase struct {
 	name  string
-	query NearBy
+	query nearBy
 }
 
 func tests() []tcase {
-	return []tcase{
-		{
-			name: "1000",
-			query: NearBy{
+	inp := []float64{5000, 8000, 10000}
+	ret := make([]tcase, 0, len(inp))
+	for i := range inp {
+		ret = append(ret, tcase{
+			name: fmt.Sprintf("%f", inp[i]),
+			query: nearBy{
 				Location: location.Location{
 					Name: "target",
 					Lat:  43.244555,
@@ -27,42 +36,15 @@ func tests() []tcase {
 					Ts:   location.Timestamp(time.Now().UTC().Unix()),
 					TTL:  10 * time.Minute,
 				},
-				Radius: 1000,
-				Limit:  100,
+				Radius: inp[i],
+				Limit:  300,
 			},
-		},
-		{
-			name: "5000",
-			query: NearBy{
-				Location: location.Location{
-					Name: "target",
-					Lat:  43.244555,
-					Lon:  76.940012,
-					Ts:   location.Timestamp(time.Now().UTC().Unix()),
-					TTL:  10 * time.Minute,
-				},
-				Radius: 5000,
-				Limit:  100,
-			},
-		},
-		{
-			name: "10000",
-			query: NearBy{
-				Location: location.Location{
-					Name: "target",
-					Lat:  43.244555,
-					Lon:  76.940012,
-					Ts:   location.Timestamp(time.Now().UTC().Unix()),
-					TTL:  10 * time.Minute,
-				},
-				Radius: 10000,
-				Limit:  100,
-			},
-		},
+		})
 	}
+	return ret
 }
 
-func BenchmarkNearbyV2(b *testing.B) {
+func BenchmarkNearbyFunOutWrite(b *testing.B) {
 
 	const url = "http://localhost:3000/nearby/v2"
 
@@ -96,7 +78,7 @@ func BenchmarkNearbyV2(b *testing.B) {
 	}
 }
 
-func BenchmarkNearbyV1(b *testing.B) {
+func BenchmarkNearbyFunOutRead(b *testing.B) {
 
 	const url = "http://localhost:3000/nearby/v1"
 

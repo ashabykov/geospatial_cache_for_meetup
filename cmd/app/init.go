@@ -43,6 +43,7 @@ func Init(ctx context.Context) (*fatout_read_client.Client, *fanout_write_client
 				ContextTimeoutEnabled: true,
 				ConnMaxIdleTime:       170 * time.Second,
 			}),
+			ttl,
 		)
 		sub = kafka_broadcaster.NewSubscriber(
 			[]string{kafkaAddr},

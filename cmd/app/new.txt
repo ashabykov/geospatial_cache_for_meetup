@@ -1,0 +1,15 @@
+goos: darwin
+goarch: arm64
+cpu: Apple M3 Pro
+BenchmarkNearbyFunOutWrite/100.000000-12         	    2196	    465837 ns/op	   19565 B/op	     146 allocs/op
+BenchmarkNearbyFunOutWrite/500.000000-12         	    2672	    503306 ns/op	   19574 B/op	     147 allocs/op
+BenchmarkNearbyFunOutWrite/1000.000000-12        	    2478	    501586 ns/op	   19667 B/op	     149 allocs/op
+BenchmarkNearbyFunOutWrite/5000.000000-12        	    3255	    406621 ns/op	   19585 B/op	     149 allocs/op
+BenchmarkNearbyFunOutWrite/7000.000000-12        	    2955	    430621 ns/op	   19524 B/op	     149 allocs/op
+BenchmarkNearbyFunOutWrite/8000.000000-12        	    3336	    406768 ns/op	   19551 B/op	     149 allocs/op
+BenchmarkNearbyFunOutWrite/9000.000000-12        	    3148	    398922 ns/op	   19391 B/op	     149 allocs/op
+BenchmarkNearbyFunOutWrite/10000.000000-12       	    3224	    418941 ns/op	   19471 B/op	     149 allocs/op
+BenchmarkNearbyFunOutWrite/11000.000000-12       	    2904	    411907 ns/op	   19780 B/op	     149 allocs/op
+BenchmarkNearbyFunOutWrite/15000.000000-12       	    2883	    415722 ns/op	   19562 B/op	     149 allocs/op
+PASS
+ok  	command-line-arguments	14.458s

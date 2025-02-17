@@ -1,6 +1,7 @@
 package location
 
 import (
+	"sort"
 	"time"
 
 	"github.com/uber/h3-go/v4"
@@ -71,9 +72,48 @@ func (l Location) ShardKey() string {
 	).String()
 }
 
-func (l Location) ShardKeys() string {
-	LatLng := h3.NewLatLng(l.Lat.Float64(), l.Lon.Float64())
-	h3.
+type HexDistance struct {
+	Hex      string
+	Distance float64
+}
+
+func (l Location) NearHex(resolution int) []string {
+	latLng := h3.NewLatLng(l.Lat.Float64(), l.Lon.Float64())
+	originCell := h3.LatLngToCell(latLng, resolution)
+	originCellLatLng := originCell.LatLng()
+
+	hexDistances := make([]HexDistance, 0, 7)
+	hexDistances = append(hexDistances, HexDistance{
+		Hex: originCell.String(),
+		Distance: l.CosineDistance(Location{
+			Lat: Latitude(originCellLatLng.Lat),
+			Lon: Longitude(originCellLatLng.Lng),
+		}),
+	})
+
+	directedEdges := originCell.DirectedEdges()
+	for i := range directedEdges {
+		cellLatLng := directedEdges[i].Destination().LatLng()
+		distance := l.CosineDistance(Location{
+			Lat: Latitude(cellLatLng.Lat),
+			Lon: Longitude(cellLatLng.Lng),
+		})
+		hexDistances = append(hexDistances, HexDistance{
+			Hex:      directedEdges[i].Destination().String(),
+			Distance: distance,
+		})
+	}
+
+	sort.Slice(hexDistances, func(i, j int) bool {
+		return hexDistances[i].Distance < hexDistances[j].Distance
+	})
+
+	result := make([]string, len(hexDistances))
+	for i := 0; i < len(hexDistances); i++ {
+		result[i] = hexDistances[i].Hex
+	}
+
+	return result
 }
 
 func (l Location) List() [2]float64 {

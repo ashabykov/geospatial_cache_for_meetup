@@ -48,7 +48,7 @@ func New(ctx context.Context, g geospatial, t timestamp, c cache) *Cache {
 		cleanRange:   c.TTL(),
 	}
 
-	go ccc.clean(ctx)
+	//go ccc.clean(ctx)
 
 	return ccc
 }

@@ -38,6 +38,7 @@ func main() {
 				ContextTimeoutEnabled: true,
 				ConnMaxIdleTime:       170 * time.Second,
 			}),
+			10*time.Minute,
 		)
 	)
 
@@ -61,6 +62,7 @@ func main() {
 		}
 	)
 	for _, loc := range locations(count, radius, target) {
+		loc.Ts = location.Now()
 		if err := pub.Publish(ctx, loc); err != nil {
 			fmt.Println("Publish err:", err, "\n")
 		}

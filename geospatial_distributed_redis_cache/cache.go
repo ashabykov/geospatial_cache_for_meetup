@@ -5,20 +5,23 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 
 	"github.com/ashabykov/geospatial_cache_for_meetup/location"
-	h3_radius_lookup "github.com/ashabykov/geospatial_cache_for_meetup/location/h3-radius-lookup"
 )
 
 type Cache struct {
 	redis redis.UniversalClient
+
+	ttl time.Duration
 }
 
-func New(redis redis.UniversalClient) *Cache {
-	return &Cache{redis: redis}
+func New(redis redis.UniversalClient, ttl time.Duration) *Cache {
+	return &Cache{redis: redis, ttl: ttl}
 }
 
 func (c *Cache) Set(loc location.Location) error {
@@ -72,18 +75,12 @@ func (c *Cache) Near(target location.Location, radius float64, limit int) ([]loc
 	var wg sync.WaitGroup
 
 	var (
-		ctx = context.Background()
-
-		keys = h3_radius_lookup.KRingIndexesArea(
-			target.Lat.Float64(),
-			target.Lon.Float64(),
-			radius,
-			5,
-		)
+		ctx     = context.Background()
+		shards  = target.NearHex(5)[:3]
 		results = make(chan location.Location)
 	)
 
-	for i := range keys {
+	for i := range shards {
 
 		wg.Add(1)
 
@@ -91,7 +88,7 @@ func (c *Cache) Near(target location.Location, radius float64, limit int) ([]loc
 
 			defer wg.Done()
 
-			locations, err := c.searchByKey(
+			locations, err := c.readShard(
 				ctx,
 				key,
 				target,
@@ -104,7 +101,7 @@ func (c *Cache) Near(target location.Location, radius float64, limit int) ([]loc
 			for _, loc := range locations {
 				results <- loc
 			}
-		}(keys[i])
+		}(shards[i])
 	}
 
 	go func() {
@@ -120,39 +117,37 @@ func (c *Cache) Near(target location.Location, radius float64, limit int) ([]loc
 	return resp, nil
 }
 
-func (c *Cache) searchByKey(
+func (c *Cache) readShard(
 	ctx context.Context,
-	indexKey string,
+	shardKey string,
 	target location.Location,
 	radius float64,
 	limit int,
 ) ([]location.Location, error) {
 
-	values, err := c.read(ctx, indexKey, target, radius, limit)
+	values, err := c.read(ctx, shardKey, target, radius, limit)
 	if err != nil {
 		return nil, err
 	}
 	locations := make([]location.Location, 0, len(values))
 	for i := range values {
-		geoLoc, err := parse(values[i])
-		if err != nil {
-			continue
+		if geoLoc, err := parse(values[i]); err == nil {
+			locations = append(locations, geoLoc)
 		}
-		locations = append(locations, geoLoc)
 	}
 	return locations, nil
 }
 
 func (c *Cache) read(
 	ctx context.Context,
-	indexKey string,
+	shardKey string,
 	location location.Location,
 	radius float64,
 	limit int,
 ) ([]interface{}, error) {
 	geoCmd := c.redis.GeoRadius(
 		ctx,
-		redisLocationKey(indexKey),
+		redisLocationKey(shardKey),
 		location.Lon.Float64(),
 		location.Lat.Float64(),
 		&redis.GeoRadiusQuery{
@@ -167,14 +162,47 @@ func (c *Cache) read(
 	if err := geoCmd.Err(); err != nil {
 		return nil, err
 	}
-	locations := geoCmd.Val()
-	if len(locations) < 1 {
+
+	geoMembers := geoCmd.Val()
+	if len(geoMembers) == 0 {
 		return nil, errors.New("locations are not found in geo radius")
 	}
-	keys := make([]string, 0, len(locations))
-	for i := range locations {
-		keys = append(keys, redisKey(indexKey, locations[i].Name))
+	locNames1 := make([]string, 0, len(geoMembers))
+	for i := range geoMembers {
+		locNames1 = append(locNames1, geoMembers[i].Name)
 	}
+
+	var (
+		now  = time.Now().UTC()
+		from = strconv.FormatInt(now.Add(-c.ttl).Unix(), 10)
+		to   = strconv.FormatInt(now.Unix(), 10)
+	)
+
+	zCmd := c.redis.ZRangeByScore(
+		ctx,
+		redisListKey(shardKey),
+		&redis.ZRangeBy{
+			Min:    from,
+			Max:    to,
+			Offset: 0,
+			Count:  0,
+		},
+	)
+	if err := zCmd.Err(); err != nil {
+		return nil, err
+	}
+
+	locNames2 := zCmd.Val()
+	if len(locNames2) == 0 {
+		return nil, errors.New("locations are not found in geo radius")
+	}
+
+	names := intersect(locNames1, locNames2)
+	keys := make([]string, 0, len(names))
+	for i := range names {
+		keys = append(keys, redisKey(shardKey, names[i]))
+	}
+
 	mgetCmd := c.redis.MGet(ctx, keys...)
 	if err := mgetCmd.Err(); err != nil {
 		return nil, err
@@ -187,13 +215,13 @@ func (c *Cache) read(
 }
 
 func parse(ptr interface{}) (location.Location, error) {
-	val, ok := ptr.([]byte)
+	val, ok := ptr.(string)
 	if !ok {
 		return location.Location{}, errors.New("Unable to convert string")
 	}
 
 	loc := location.Location{}
-	if err := json.Unmarshal(val, &loc); err != nil {
+	if err := json.Unmarshal([]byte(val), &loc); err != nil {
 		return location.Location{}, errors.New("Unable to convert DTO")
 	}
 	return loc, nil
@@ -209,4 +237,20 @@ func redisListKey(shardKey string) string {
 
 func redisKey(shardKey string, key string) string {
 	return fmt.Sprintf("index:geo:location:{%s}.%s", shardKey, key)
+}
+
+func intersect(shortest, longest []string) []string {
+
+	hs := make(map[string]struct{}, len(shortest))
+	for _, name := range shortest {
+		hs[name] = struct{}{}
+	}
+
+	ret := make([]string, 0, len(shortest))
+	for _, name := range longest {
+		if _, ok := hs[name]; ok {
+			ret = append(ret, name)
+		}
+	}
+	return ret
 }
