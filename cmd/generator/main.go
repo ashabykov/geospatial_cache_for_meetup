@@ -11,8 +11,8 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/ashabykov/geospatial_cache_for_meetup/cmd"
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_redis"
-	"github.com/ashabykov/geospatial_cache_for_meetup/kafka_broadcaster"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/kafka_broadcaster"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_distributed_redis_cache"
 	"github.com/ashabykov/geospatial_cache_for_meetup/location"
 )
 
@@ -29,7 +29,7 @@ func main() {
 		redisAddr  = os.Getenv("redis_addr")
 		rps        = 1000
 		pub        = kafka_broadcaster.NewPublisher([]string{kafkaAddr}, kafkaTopic, rps)
-		geo        = geospatial_redis.New(
+		geo        = geospatial_distributed_redis_cache.New(
 			redis.NewUniversalClient(&redis.UniversalOptions{
 				Addrs:                 []string{redisAddr},
 				ReadOnly:              false,

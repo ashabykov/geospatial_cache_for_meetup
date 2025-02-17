@@ -1,4 +1,4 @@
-package geospatial_redis
+package geospatial_distributed_redis_cache
 
 import (
 	"context"
@@ -23,14 +23,14 @@ func New(redis redis.UniversalClient) *Cache {
 
 func (c *Cache) Set(loc location.Location) error {
 	var (
-		idxKey = loc.Hex(5)
-		ctx    = context.Background()
+		shardKey = loc.ShardKey()
+		ctx      = context.Background()
 	)
 
 	// Set contractor geolocation TTL
 	if err := c.redis.ZAdd(
 		ctx,
-		redisListKey(idxKey),
+		redisListKey(shardKey),
 		redis.Z{
 			Score:  loc.Ts.Float64(),
 			Member: loc.Key(),
@@ -42,7 +42,7 @@ func (c *Cache) Set(loc location.Location) error {
 	// Set contractor geolocation
 	if err := c.redis.GeoAdd(
 		ctx,
-		redisLocationKey(idxKey),
+		redisLocationKey(shardKey),
 		&redis.GeoLocation{
 			Latitude:  loc.Lat.Float64(),
 			Longitude: loc.Lon.Float64(),
@@ -59,7 +59,7 @@ func (c *Cache) Set(loc location.Location) error {
 	}
 	if err = c.redis.Set(
 		ctx,
-		redisKey(idxKey, loc.Key()),
+		redisKey(shardKey, loc.Key()),
 		val,
 		loc.TTL,
 	).Err(); err != nil {
@@ -199,14 +199,14 @@ func parse(ptr interface{}) (location.Location, error) {
 	return loc, nil
 }
 
-func redisLocationKey(idxKey string) string {
-	return fmt.Sprintf("index:geo:{%s}", idxKey)
+func redisLocationKey(shardKey string) string {
+	return fmt.Sprintf("index:geo:{%s}", shardKey)
 }
 
-func redisListKey(idxKey string) string {
-	return fmt.Sprintf("index:list:{%s}", idxKey)
+func redisListKey(shardKey string) string {
+	return fmt.Sprintf("index:list:{%s}", shardKey)
 }
 
-func redisKey(idxKey string, key string) string {
-	return fmt.Sprintf("index:geo:location:{%s}.%s", idxKey, key)
+func redisKey(shardKey string, key string) string {
+	return fmt.Sprintf("index:geo:location:{%s}.%s", shardKey, key)
 }

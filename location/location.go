@@ -65,8 +65,15 @@ func (l Location) Key() string {
 	return string(l.Name)
 }
 
-func (l Location) Hex(res int) string {
-	return h3.LatLngToCell(h3.NewLatLng(l.Lat.Float64(), l.Lon.Float64()), res).String()
+func (l Location) ShardKey() string {
+	return h3.LatLngToCell(
+		h3.NewLatLng(l.Lat.Float64(), l.Lon.Float64()), 5,
+	).String()
+}
+
+func (l Location) ShardKeys() string {
+	LatLng := h3.NewLatLng(l.Lat.Float64(), l.Lon.Float64())
+	h3.
 }
 
 func (l Location) List() [2]float64 {

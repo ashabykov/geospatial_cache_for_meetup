@@ -1,4 +1,4 @@
-package geospatial_cache
+package geospatial_client_side_cache
 
 import (
 	"context"

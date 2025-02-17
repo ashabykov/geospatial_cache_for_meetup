@@ -2,6 +2,10 @@ package fanout_write_client
 
 import (
 	"context"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/kafka_broadcaster"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/lru_cache"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/rtree_index"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/sorted_set"
 	"log"
 	"os"
 	"strconv"
@@ -11,12 +15,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/ashabykov/geospatial_cache_for_meetup/cmd"
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache"
-	"github.com/ashabykov/geospatial_cache_for_meetup/kafka_broadcaster"
 	"github.com/ashabykov/geospatial_cache_for_meetup/location"
-	"github.com/ashabykov/geospatial_cache_for_meetup/lru_cache"
-	"github.com/ashabykov/geospatial_cache_for_meetup/rtree_index"
-	"github.com/ashabykov/geospatial_cache_for_meetup/sorted_set"
 )
 
 func BenchmarkClientNear_for_FunOutWrite(b *testing.B) {
@@ -39,7 +38,7 @@ func BenchmarkClientNear_for_FunOutWrite(b *testing.B) {
 			partitions,
 			timeOffset,
 		)
-		geo = geospatial_cache.New(
+		geo = geospatial_client_side_cache.New(
 			ctx,
 			rtree_index.NewIndex(),
 			sorted_set.New(),

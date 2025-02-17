@@ -13,12 +13,12 @@ import (
 
 	"github.com/ashabykov/geospatial_cache_for_meetup/fan-out-read-client"
 	"github.com/ashabykov/geospatial_cache_for_meetup/fan-out-write-client"
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache"
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_redis"
-	"github.com/ashabykov/geospatial_cache_for_meetup/kafka_broadcaster"
-	"github.com/ashabykov/geospatial_cache_for_meetup/lru_cache"
-	"github.com/ashabykov/geospatial_cache_for_meetup/rtree_index"
-	"github.com/ashabykov/geospatial_cache_for_meetup/sorted_set"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/kafka_broadcaster"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/lru_cache"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/rtree_index"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/sorted_set"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_distributed_redis_cache"
 )
 
 func Init(ctx context.Context) (*fatout_read_client.Client, *fanout_write_client.Client) {
@@ -34,7 +34,7 @@ func Init(ctx context.Context) (*fatout_read_client.Client, *fanout_write_client
 		ttl           = 10 * time.Minute
 		capacity      = 10000
 		redisAddr     = os.Getenv("redis_addr")
-		geoV1         = geospatial_redis.New(
+		geoV1         = geospatial_distributed_redis_cache.New(
 			redis.NewUniversalClient(&redis.UniversalOptions{
 				Addrs:                 []string{redisAddr},
 				ReadOnly:              false,
@@ -50,7 +50,7 @@ func Init(ctx context.Context) (*fatout_read_client.Client, *fanout_write_client
 			partitions,
 			timeOffset,
 		)
-		geoV2 = geospatial_cache.New(
+		geoV2 = geospatial_client_side_cache.New(
 			ctx,
 			rtree_index.NewIndex(),
 			sorted_set.New(),

@@ -1,4 +1,4 @@
-package geospatial_cache
+package geospatial_client_side_cache
 
 import (
 	"context"
@@ -7,10 +7,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/lru_cache"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/rtree_index"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/sorted_set"
 	"github.com/ashabykov/geospatial_cache_for_meetup/location"
-	"github.com/ashabykov/geospatial_cache_for_meetup/lru_cache"
-	"github.com/ashabykov/geospatial_cache_for_meetup/rtree_index"
-	"github.com/ashabykov/geospatial_cache_for_meetup/sorted_set"
 )
 
 func TestCache_Del(t *testing.T) {
