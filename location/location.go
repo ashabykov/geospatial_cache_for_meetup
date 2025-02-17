@@ -1,6 +1,10 @@
 package location
 
-import "time"
+import (
+	"time"
+
+	"github.com/uber/h3-go/v4"
+)
 
 type (
 	Name      string
@@ -49,12 +53,20 @@ func (ts Timestamp) Int64() int64 {
 	return int64(ts)
 }
 
+func (ts Timestamp) Float64() float64 {
+	return float64(ts)
+}
+
 func (lat Latitude) Float64() float64 {
 	return float64(lat)
 }
 
 func (l Location) Key() string {
 	return string(l.Name)
+}
+
+func (l Location) Hex(res int) string {
+	return h3.LatLngToCell(h3.NewLatLng(l.Lat.Float64(), l.Lon.Float64()), res).String()
 }
 
 func (l Location) List() [2]float64 {

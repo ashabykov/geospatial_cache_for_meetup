@@ -3,6 +3,7 @@ package geospatial_cache
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"time"
 
 	"github.com/ashabykov/geospatial_cache_for_meetup/location"
@@ -79,7 +80,7 @@ func (c *Cache) clean(ctx context.Context) {
 	}
 }
 
-func (c *Cache) Near(target location.Location, radius float64, limit int) []location.Location {
+func (c *Cache) Near(target location.Location, radius float64, limit int) ([]location.Location, error) {
 	var (
 		now  = time.Now().UTC()
 		from = location.Timestamp(now.Add(-c.cache.TTL()).Unix())
@@ -91,24 +92,25 @@ func (c *Cache) Near(target location.Location, radius float64, limit int) []loca
 	loc2 := c.geospatial.Nearby(target, radius, limit)
 
 	if len(loc1) == 0 || len(loc2) == 0 {
-		return []location.Location{}
+		return []location.Location{}, errors.New("no locations found")
 	}
 
 	if len(loc1) > len(loc2) {
-		return c.get(intersect(loc2, loc1)...)
+		return c.get(intersect(loc2, loc1)...), nil
 	}
 
-	return c.get(intersect(loc1, loc2)...)
+	return c.get(intersect(loc1, loc2)...), nil
 }
 
 func (c *Cache) Get(name location.Name) (location.Location, bool) {
 	return c.cache.Get(name.String())
 }
 
-func (c *Cache) Set(target location.Location) {
+func (c *Cache) Set(target location.Location) error {
 	c.cache.Set(target.Key(), target, target.TTL)
 	c.timestamp.Add(target)
 	c.geospatial.Add(target)
+	return nil
 }
 
 func (c *Cache) Del(target location.Location) {

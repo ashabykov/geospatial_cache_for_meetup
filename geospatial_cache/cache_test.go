@@ -79,7 +79,10 @@ func TestCache_Del(t *testing.T) {
 			got, exist := idx.Get(tt.target.Name)
 			assert.Equal(t, location.Location{}, got)
 			assert.False(t, exist)
-			assert.Equal(t, 0, len(idx.Near(tt.target, tt.radius, tt.limit)))
+
+			locations, err := idx.Near(tt.target, tt.radius, tt.limit)
+			assert.NotNil(t, err)
+			assert.Equal(t, 0, len(locations))
 		})
 	}
 }
@@ -226,7 +229,9 @@ func TestCache_Near(t *testing.T) {
 				idx.Set(tt.locations[i])
 			}
 
-			assert.Equal(t, tt.expected, idx.Near(tt.target, tt.radius, tt.limit))
+			got, err := idx.Near(tt.target, tt.radius, tt.limit)
+			assert.Nil(t, err)
+			assert.Equal(t, tt.expected, got)
 		})
 	}
 }

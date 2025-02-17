@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/ashabykov/geospatial_cache_for_meetup/cmd"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_redis"
 	"github.com/ashabykov/geospatial_cache_for_meetup/kafka_broadcaster"
 	"github.com/ashabykov/geospatial_cache_for_meetup/location"
 )
@@ -21,11 +23,22 @@ func main() {
 	}
 
 	var (
-		ctx   = cmd.WithContext(context.Background())
-		addr  = os.Getenv("addr")
-		topic = os.Getenv("topic")
-		rps   = 1000
-		pub   = kafka_broadcaster.NewPublisher([]string{addr}, topic, rps)
+		ctx        = cmd.WithContext(context.Background())
+		kafkaAddr  = os.Getenv("kafka_addr")
+		kafkaTopic = os.Getenv("kafka_topic")
+		redisAddr  = os.Getenv("redis_addr")
+		rps        = 1000
+		pub        = kafka_broadcaster.NewPublisher([]string{kafkaAddr}, kafkaTopic, rps)
+		geo        = geospatial_redis.New(
+			redis.NewUniversalClient(&redis.UniversalOptions{
+				Addrs:                 []string{redisAddr},
+				ReadOnly:              false,
+				RouteByLatency:        false,
+				RouteRandomly:         true,
+				ContextTimeoutEnabled: true,
+				ConnMaxIdleTime:       170 * time.Second,
+			}),
+		)
 	)
 
 	defer func() {
@@ -47,9 +60,13 @@ func main() {
 			TTL:  10 * time.Minute,
 		}
 	)
-
-	if err := pub.Publish(ctx, locations(count, radius, target)...); err != nil {
-		fmt.Println("Publish err:", err, "\n")
+	for _, loc := range locations(count, radius, target) {
+		if err := pub.Publish(ctx, loc); err != nil {
+			fmt.Println("Publish err:", err, "\n")
+		}
+		if err := geo.Set(loc); err != nil {
+			fmt.Println("Set err:", err, "\n")
+		}
 	}
 
 	fmt.Println("Published messages:", count, "\n")

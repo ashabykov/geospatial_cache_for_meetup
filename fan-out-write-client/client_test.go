@@ -1,4 +1,4 @@
-package geospatial_cache_for_meetup
+package fanout_write_client
 
 import (
 	"context"
@@ -27,15 +27,15 @@ func BenchmarkClientNear_for_FunOutWrite(b *testing.B) {
 
 	var (
 		ctx           = cmd.WithContext(context.Background())
-		addr          = os.Getenv("addr")
-		topic         = os.Getenv("topic")
+		kafka_addr    = os.Getenv("kafka_addr")
+		kafka_topic   = os.Getenv("kafka_topic")
 		partitions, _ = strconv.Atoi(os.Getenv("partitions"))
 		timeOffset    = 5 * time.Minute
 		ttl           = 20 * time.Minute
 		capacity      = 10000
 		sub           = kafka_broadcaster.NewSubscriber(
-			[]string{addr},
-			topic,
+			[]string{kafka_addr},
+			kafka_topic,
 			partitions,
 			timeOffset,
 		)
@@ -67,7 +67,11 @@ func BenchmarkClientNear_for_FunOutWrite(b *testing.B) {
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			println(len(client.Near(target, radius, limit)))
+			got, err := client.Near(target, radius, limit)
+			if err != nil {
+				log.Fatal(err)
+			}
+			println(len(got))
 		}
 	})
 }

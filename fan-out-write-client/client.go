@@ -1,4 +1,4 @@
-package geospatial_cache_for_meetup
+package fanout_write_client
 
 import (
 	"context"
@@ -13,8 +13,8 @@ type (
 	}
 
 	geospatial interface {
-		Near(target location.Location, radius float64, limit int) []location.Location
-		Set(target location.Location)
+		Near(target location.Location, radius float64, limit int) ([]location.Location, error)
+		Set(target location.Location) error
 	}
 
 	Client struct {
@@ -23,7 +23,7 @@ type (
 	}
 )
 
-func (cl *Client) Near(target location.Location, radius float64, limit int) []location.Location {
+func (cl *Client) Near(target location.Location, radius float64, limit int) ([]location.Location, error) {
 	return cl.geospatial.Near(target, radius, limit)
 }
 
@@ -38,7 +38,9 @@ func (cl *Client) SubscribeOnUpdates(ctx context.Context) {
 
 	for result := range results {
 
-		cl.geospatial.Set(result)
+		if err = cl.geospatial.Set(result); err != nil {
+			fmt.Println("Client subscriber set error:", err)
+		}
 
 		fmt.Println("Client geospatial set:", result)
 	}
