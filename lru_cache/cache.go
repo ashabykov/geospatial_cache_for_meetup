@@ -25,6 +25,7 @@ func New(ttl time.Duration, capacity int) *Cache {
 	}
 
 	return &Cache{
+		ttl:  ttl,
 		base: expirable.NewLRU[string, location.Location](capacity, nil, ttl),
 	}
 }

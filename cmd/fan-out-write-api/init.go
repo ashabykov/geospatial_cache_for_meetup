@@ -26,8 +26,8 @@ func Init(ctx context.Context) *geospatial_cache_for_meetup.Client {
 		addr          = os.Getenv("addr")
 		topic         = os.Getenv("topic")
 		partitions, _ = strconv.Atoi(os.Getenv("partitions"))
-		timeOffset    = 5 * time.Minute
-		ttl           = 20 * time.Minute
+		timeOffset    = 10 * time.Minute
+		ttl           = 10 * time.Minute
 		capacity      = 10000
 		sub           = kafka_broadcaster.NewSubscriber(
 			[]string{addr},

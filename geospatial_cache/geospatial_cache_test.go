@@ -14,7 +14,7 @@ import (
 )
 
 func TestCache_Del(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	tests := []struct {
 		name      string
 		radius    float64
@@ -85,7 +85,7 @@ func TestCache_Del(t *testing.T) {
 }
 
 func TestCache_Near(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	tests := []struct {
 		name   string
 		target location.Location

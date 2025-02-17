@@ -24,6 +24,10 @@ type (
 	Neighbours []Neighbour
 )
 
+func Now() Timestamp {
+	return Timestamp(time.Now().UTC().Unix())
+}
+
 func NewLocation(name Name, ts Timestamp, lon Longitude, lat Latitude) Location {
 	return Location{
 		Name: name,

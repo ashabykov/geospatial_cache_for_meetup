@@ -43,7 +43,7 @@ func main() {
 			Name: "target",
 			Lat:  43.244555,
 			Lon:  76.940012,
-			Ts:   location.Timestamp(time.Now().Unix()),
+			Ts:   location.Timestamp(time.Now().UTC().Unix()),
 			TTL:  10 * time.Minute,
 		}
 	)

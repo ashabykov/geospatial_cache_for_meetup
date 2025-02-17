@@ -28,7 +28,7 @@ func main() {
 
 	go client.SubscribeOnUpdates(ctx)
 
-	r.Post("/nearby/", func(w http.ResponseWriter, r *http.Request) {
+	r.Post("/nearby", func(w http.ResponseWriter, r *http.Request) {
 		query := NearBy{}
 		err := json.NewDecoder(r.Body).Decode(&query)
 		if err != nil {

@@ -18,12 +18,12 @@ func TestIndex_Remove(t *testing.T) {
 	}{
 		{
 			name: "remove from index",
-			from: location.Timestamp(time.Now().Add(-6 * time.Minute).Unix()),
-			to:   location.Timestamp(time.Now().Add(1 * time.Minute).Unix()),
+			from: location.Timestamp(time.Now().UTC().Add(-6 * time.Minute).Unix()),
+			to:   location.Timestamp(time.Now().UTC().Add(1 * time.Minute).Unix()),
 			target: location.NewLocation(
 				"awesome-3",
 				location.Timestamp(
-					time.Now().Add(-5*time.Minute).Unix(),
+					time.Now().UTC().Add(-5*time.Minute).Unix(),
 				),
 				45.786877,
 				47.679879,
@@ -32,7 +32,7 @@ func TestIndex_Remove(t *testing.T) {
 				location.NewLocation(
 					"awesome-1",
 					location.Timestamp(
-						time.Now().Add(-15*time.Minute).Unix(),
+						time.Now().UTC().Add(-15*time.Minute).Unix(),
 					),
 					45.68878,
 					47.57867,
@@ -40,7 +40,7 @@ func TestIndex_Remove(t *testing.T) {
 				location.NewLocation(
 					"awesome-2",
 					location.Timestamp(
-						time.Now().Add(-10*time.Minute).Unix(),
+						time.Now().UTC().Add(-10*time.Minute).Unix(),
 					),
 					45.467467,
 					47.456656,
@@ -48,7 +48,7 @@ func TestIndex_Remove(t *testing.T) {
 				location.NewLocation(
 					"awesome-3",
 					location.Timestamp(
-						time.Now().Add(-5*time.Minute).Unix(),
+						time.Now().UTC().Add(-5*time.Minute).Unix(),
 					),
 					45.786877,
 					47.679879,
@@ -81,13 +81,13 @@ func TestIndex_Read(t *testing.T) {
 	}{
 		{
 			name: "must return last two location's names",
-			from: location.Timestamp(time.Now().Add(-6 * time.Minute).Unix()),
-			to:   location.Timestamp(time.Now().Add(1 * time.Minute).Unix()),
+			from: location.Timestamp(time.Now().UTC().Add(-6 * time.Minute).Unix()),
+			to:   location.Timestamp(time.Now().UTC().Add(1 * time.Minute).Unix()),
 			locations: []location.Location{
 				location.NewLocation(
 					"awesome-1",
 					location.Timestamp(
-						time.Now().Add(-15*time.Minute).Unix(),
+						time.Now().UTC().Add(-15*time.Minute).Unix(),
 					),
 					45.68878,
 					47.57867,
@@ -95,7 +95,7 @@ func TestIndex_Read(t *testing.T) {
 				location.NewLocation(
 					"awesome-2",
 					location.Timestamp(
-						time.Now().Add(-10*time.Minute).Unix(),
+						time.Now().UTC().Add(-10*time.Minute).Unix(),
 					),
 					45.467467,
 					47.456656,
@@ -103,7 +103,7 @@ func TestIndex_Read(t *testing.T) {
 				location.NewLocation(
 					"awesome-3",
 					location.Timestamp(
-						time.Now().Add(-5*time.Minute).Unix(),
+						time.Now().UTC().Add(-5*time.Minute).Unix(),
 					),
 					45.786877,
 					47.679879,
@@ -111,7 +111,7 @@ func TestIndex_Read(t *testing.T) {
 				location.NewLocation(
 					"awesome-4",
 					location.Timestamp(
-						time.Now().Unix(),
+						time.Now().UTC().Unix(),
 					),
 					45.786877,
 					47.679879,
@@ -123,14 +123,14 @@ func TestIndex_Read(t *testing.T) {
 			},
 		},
 		{
-			name: "all locations are expired",
-			from: location.Timestamp(time.Now().Add(-4 * time.Minute).Unix()),
-			to:   location.Timestamp(time.Now().Unix()),
+			name: "must return fist two location's names",
+			from: location.Timestamp(0),
+			to:   location.Timestamp(time.Now().UTC().Add(-10 * time.Minute).Unix()),
 			locations: []location.Location{
 				location.NewLocation(
 					"awesome-1",
 					location.Timestamp(
-						time.Now().Add(-15*time.Minute).Unix(),
+						time.Now().UTC().Add(-15*time.Minute).Unix(),
 					),
 					45.68878,
 					47.57867,
@@ -138,7 +138,7 @@ func TestIndex_Read(t *testing.T) {
 				location.NewLocation(
 					"awesome-2",
 					location.Timestamp(
-						time.Now().Add(-10*time.Minute).Unix(),
+						time.Now().UTC().Add(-10*time.Minute).Unix(),
 					),
 					45.467467,
 					47.456656,
@@ -146,7 +146,50 @@ func TestIndex_Read(t *testing.T) {
 				location.NewLocation(
 					"awesome-3",
 					location.Timestamp(
-						time.Now().Add(-5*time.Minute).Unix(),
+						time.Now().UTC().Add(-5*time.Minute).Unix(),
+					),
+					45.786877,
+					47.679879,
+				),
+				location.NewLocation(
+					"awesome-4",
+					location.Timestamp(
+						time.Now().UTC().Unix(),
+					),
+					45.786877,
+					47.679879,
+				),
+			},
+			expected: []location.Name{
+				"awesome-1",
+				"awesome-2",
+			},
+		},
+		{
+			name: "all locations are expired",
+			from: location.Timestamp(time.Now().UTC().Add(-4 * time.Minute).Unix()),
+			to:   location.Timestamp(time.Now().UTC().Unix()),
+			locations: []location.Location{
+				location.NewLocation(
+					"awesome-1",
+					location.Timestamp(
+						time.Now().UTC().Add(-15*time.Minute).Unix(),
+					),
+					45.68878,
+					47.57867,
+				),
+				location.NewLocation(
+					"awesome-2",
+					location.Timestamp(
+						time.Now().UTC().Add(-10*time.Minute).Unix(),
+					),
+					45.467467,
+					47.456656,
+				),
+				location.NewLocation(
+					"awesome-3",
+					location.Timestamp(
+						time.Now().UTC().Add(-5*time.Minute).Unix(),
 					),
 					45.786877,
 					47.679879,

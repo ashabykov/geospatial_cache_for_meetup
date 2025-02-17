@@ -47,7 +47,7 @@ func New(ctx context.Context, g geospatial, t timestamp, c cache) *Cache {
 		cleanRange:   c.TTL(),
 	}
 
-	//go ccc.clean(ctx)
+	go ccc.clean(ctx)
 
 	return ccc
 }
@@ -63,7 +63,7 @@ func (c *Cache) clean(ctx context.Context) {
 		case <-ticker.C:
 			var (
 				from = location.Timestamp(0)
-				to   = location.Timestamp(time.Now().Add(-c.cleanRange).Unix())
+				to   = location.Timestamp(time.Now().UTC().Add(-c.cleanRange).Unix())
 			)
 			for _, name := range c.timestamp.Read(from, to) {
 				if loc, ok := c.cache.Get(name.String()); ok {
@@ -81,9 +81,9 @@ func (c *Cache) clean(ctx context.Context) {
 
 func (c *Cache) Near(target location.Location, radius float64, limit int) []location.Location {
 	var (
-		now  = time.Now()
-		from = location.Timestamp(now.UTC().Add(-target.TTL).Unix())
-		to   = location.Timestamp(now.UTC().Unix())
+		now  = time.Now().UTC()
+		from = location.Timestamp(now.Add(-c.cache.TTL()).Unix())
+		to   = location.Timestamp(now.Unix())
 	)
 
 	loc1 := c.timestamp.Read(from, to)
