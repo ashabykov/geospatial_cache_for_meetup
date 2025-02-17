@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"expvar"
 	"log"
 	"net/http"
+	"net/http/pprof"
 
 	"github.com/go-chi/chi/v5"
 
@@ -22,64 +23,35 @@ func main() {
 
 	ctx := cmd.WithContext(context.Background())
 
-	client1, client2 := Init(ctx)
+	a := NewApp(ctx)
 
-	go client2.SubscribeOnUpdates(ctx)
+	a.Star(ctx)
 
 	r := chi.NewRouter()
-	r.Post("/nearby/v1", func(w http.ResponseWriter, r *http.Request) {
-		query := NearBy{}
-		err := json.NewDecoder(r.Body).Decode(&query)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
 
-		results, err := client1.Near(query.Location, query.Radius, query.Limit)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
-		}
+	r.Post("/nearby/v1", a.FanOutReadClientHandler)
+	r.Post("/nearby/v2", a.FanOutWriteClientHandler)
 
-		jsonItem, err := json.Marshal(results)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		w.Write(jsonItem)
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, r.RequestURI+"/pprof/", http.StatusMovedPermanently)
+	})
+	r.HandleFunc("/pprof", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, r.RequestURI+"/", http.StatusMovedPermanently)
 	})
 
-	r.Post("/nearby/v2", func(w http.ResponseWriter, r *http.Request) {
-		query := NearBy{}
-		err := json.NewDecoder(r.Body).Decode(&query)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
+	r.HandleFunc("/pprof/*", pprof.Index)
+	r.HandleFunc("/pprof/cmdline", pprof.Cmdline)
+	r.HandleFunc("/pprof/profile", pprof.Profile)
+	r.HandleFunc("/pprof/symbol", pprof.Symbol)
+	r.HandleFunc("/pprof/trace", pprof.Trace)
+	r.Handle("/vars", expvar.Handler())
 
-		results, err := client2.Near(query.Location, query.Radius, query.Limit)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		jsonItem, err := json.Marshal(results)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		w.Write(jsonItem)
-	})
+	r.Handle("/pprof/goroutine", pprof.Handler("goroutine"))
+	r.Handle("/pprof/threadcreate", pprof.Handler("threadcreate"))
+	r.Handle("/pprof/mutex", pprof.Handler("mutex"))
+	r.Handle("/pprof/heap", pprof.Handler("heap"))
+	r.Handle("/pprof/block", pprof.Handler("block"))
+	r.Handle("/pprof/allocs", pprof.Handler("allocs"))
 
 	if err := http.ListenAndServe(":3000", r); err != nil {
 		log.Fatal(err)

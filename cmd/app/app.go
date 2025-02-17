@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
 
 	"log"
 	"os"
@@ -21,7 +23,70 @@ import (
 	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_distributed_redis_cache"
 )
 
-func Init(ctx context.Context) (*fatout_read_client.Client, *fanout_write_client.Client) {
+type app struct {
+	fatOutReadClient  *fatout_read_client.Client
+	fanOutWriteClient *fanout_write_client.Client
+}
+
+func (a *app) Star(ctx context.Context) {
+	go a.fanOutWriteClient.SubscribeOnUpdates(ctx)
+}
+
+func (a *app) FanOutReadClientHandler(w http.ResponseWriter, r *http.Request) {
+	query := NearBy{}
+	err := json.NewDecoder(r.Body).Decode(&query)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	results, err := a.fatOutReadClient.Near(query.Location, query.Radius, query.Limit)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	jsonItem, err := json.Marshal(results)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonItem)
+}
+
+func (a *app) FanOutWriteClientHandler(w http.ResponseWriter, r *http.Request) {
+	query := NearBy{}
+	err := json.NewDecoder(r.Body).Decode(&query)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	results, err := a.fanOutWriteClient.Near(query.Location, query.Radius, query.Limit)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	jsonItem, err := json.Marshal(results)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonItem)
+}
+
+func NewApp(ctx context.Context) *app {
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -58,5 +123,8 @@ func Init(ctx context.Context) (*fatout_read_client.Client, *fanout_write_client
 			lru_cache.New(ttl, capacity),
 		)
 	)
-	return fatout_read_client.New(geoV1), fanout_write_client.New(sub, geoV2)
+	return &app{
+		fatOutReadClient:  fatout_read_client.New(geoV1),
+		fanOutWriteClient: fanout_write_client.New(sub, geoV2),
+	}
 }
