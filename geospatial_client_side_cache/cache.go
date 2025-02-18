@@ -39,6 +39,7 @@ type Cache struct {
 	cleanRange   time.Duration
 }
 
+// New initializes the cache with provided geospatial, timestamp, and cache implementations.
 func New(ctx context.Context, g geospatial, t timestamp, c cache) *Cache {
 	ccc := &Cache{
 		cache:        c,
@@ -53,6 +54,7 @@ func New(ctx context.Context, g geospatial, t timestamp, c cache) *Cache {
 	return ccc
 }
 
+// clean periodically cleans outdated entries from the cache.
 func (c *Cache) clean(ctx context.Context) {
 
 	ticker := time.NewTicker(c.cleanTimeout)
@@ -80,6 +82,7 @@ func (c *Cache) clean(ctx context.Context) {
 	}
 }
 
+// Near finds locations near a target within a specified radius and limit.
 func (c *Cache) Near(target location.Location, radius float64, limit int) ([]location.Location, error) {
 	var (
 		now  = time.Now().UTC()
@@ -102,10 +105,12 @@ func (c *Cache) Near(target location.Location, radius float64, limit int) ([]loc
 	return c.get(intersect(loc1, loc2)...), nil
 }
 
+// Get retrieves a location by name from the cache.
 func (c *Cache) Get(name location.Name) (location.Location, bool) {
 	return c.cache.Get(name.String())
 }
 
+// Set adds a location to the cache, geospatial, and timestamp indexes.
 func (c *Cache) Set(target location.Location) error {
 	c.cache.Set(target.Key(), target, target.TTL)
 	c.timestamp.Add(target)
@@ -113,12 +118,14 @@ func (c *Cache) Set(target location.Location) error {
 	return nil
 }
 
+// Del removes a location from the cache, geospatial, and timestamp indexes.
 func (c *Cache) Del(target location.Location) {
 	c.geospatial.Remove(target)
 	c.timestamp.Add(target)
 	c.cache.Del(target.Key())
 }
 
+// get helper function to retrieve a list of locations by names.
 func (c *Cache) get(names ...location.Name) []location.Location {
 
 	ret := make([]location.Location, 0, len(names))
@@ -130,6 +137,7 @@ func (c *Cache) get(names ...location.Name) []location.Location {
 	return ret
 }
 
+// intersect helper function to find common elements between two lists of location names.
 func intersect(shortest, longest []location.Name) []location.Name {
 
 	hs := make(map[location.Name]struct{}, len(shortest))
