@@ -31,6 +31,3 @@ up:
 down:
 	docker-compose -f ./docker-compose.yaml down
 
-.PHONY: bench
-bench:
-	go test -run='^$' -bench=cmd/fan-out-write/BenchmarkGetAll -benchtime=10x -count=6 -timeout 60m > debug.profile

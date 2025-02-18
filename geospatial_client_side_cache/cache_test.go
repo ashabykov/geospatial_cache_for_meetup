@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/lru_cache"
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/rtree_index"
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/sorted_set"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/lru_cache"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/rtree_index"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/sorted_set"
 	"github.com/ashabykov/geospatial_cache_for_meetup/location"
 )
 

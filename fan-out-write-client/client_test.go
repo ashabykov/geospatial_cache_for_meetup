@@ -2,10 +2,6 @@ package fanout_write_client
 
 import (
 	"context"
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/kafka_broadcaster"
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/lru_cache"
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/rtree_index"
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_cache/sorted_set"
 	"log"
 	"os"
 	"strconv"
@@ -15,6 +11,11 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/ashabykov/geospatial_cache_for_meetup/cmd"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/kafka_broadcaster"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/lru_cache"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/rtree_index"
+	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/sorted_set"
 	"github.com/ashabykov/geospatial_cache_for_meetup/location"
 )
 

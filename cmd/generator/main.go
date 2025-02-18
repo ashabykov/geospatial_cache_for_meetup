@@ -64,14 +64,14 @@ func main() {
 	for _, loc := range locations(count, radius, target) {
 		loc.Ts = location.Now()
 		if err := pub.Publish(ctx, loc); err != nil {
-			fmt.Println("Publish err:", err, "\n")
+			fmt.Println("Publish err:", err)
 		}
 		if err := geo.Set(loc); err != nil {
-			fmt.Println("Set err:", err, "\n")
+			fmt.Println("Set err:", err)
 		}
 	}
 
-	fmt.Println("Published messages:", count, "\n")
+	fmt.Println("Published messages:", count)
 }
 
 func locations(count int, radius float64, center location.Location) []location.Location {
