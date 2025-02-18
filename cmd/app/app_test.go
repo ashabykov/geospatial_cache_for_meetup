@@ -44,9 +44,9 @@ func tests() []tcase {
 	return ret
 }
 
-func BenchmarkNearbyFunOutWrite(b *testing.B) {
+func BenchmarkApp_FanOutReadClientHandler(b *testing.B) {
 
-	const url = "http://localhost:3000/nearby/v2"
+	const url = "http://localhost:3000/nearby/v1"
 
 	for _, tc := range tests() {
 		b.Run(tc.name, func(b *testing.B) {
@@ -78,9 +78,9 @@ func BenchmarkNearbyFunOutWrite(b *testing.B) {
 	}
 }
 
-func BenchmarkNearbyFunOutRead(b *testing.B) {
+func BenchmarkApp_FanOutWriteClientHandler(b *testing.B) {
 
-	const url = "http://localhost:3000/nearby/v1"
+	const url = "http://localhost:3000/nearby/v2"
 
 	for _, tc := range tests() {
 		b.Run(tc.name, func(b *testing.B) {
