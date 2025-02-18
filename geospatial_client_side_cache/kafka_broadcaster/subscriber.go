@@ -101,11 +101,9 @@ func (s *Subscriber) worker(ctx context.Context, results chan<- location.Locatio
 }
 
 func (s *Subscriber) resetOffset(ctx context.Context) error {
-
 	startOffset := time.Now().UTC().Add(-s.timeOffset)
-
-	for partition := range s.partitions {
-		if err := s.partitions[partition].SetOffsetAt(ctx, startOffset); err != nil {
+	for i := range s.partitions {
+		if err := s.partitions[i].SetOffsetAt(ctx, startOffset); err != nil {
 			return err
 		}
 	}
@@ -113,8 +111,8 @@ func (s *Subscriber) resetOffset(ctx context.Context) error {
 }
 
 func (s *Subscriber) Close() error {
-	for _, partition := range s.partitions {
-		if err := partition.Close(); err != nil {
+	for i := range s.partitions {
+		if err := s.partitions[i].Close(); err != nil {
 			return err
 		}
 	}
