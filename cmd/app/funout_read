@@ -1,0 +1,8 @@
+goos: darwin
+goarch: arm64
+cpu: Apple M3 Pro
+BenchmarkApp_FanOutReadClientHandler/5000.000000-12         	     386	   2809161 ns/op
+BenchmarkApp_FanOutReadClientHandler/8000.000000-12         	     440	   2780001 ns/op
+BenchmarkApp_FanOutReadClientHandler/10000.000000-12        	     439	   2736317 ns/op
+PASS
+ok  	command-line-arguments	5.043s

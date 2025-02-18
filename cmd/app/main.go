@@ -23,14 +23,14 @@ func main() {
 
 	ctx := cmd.WithContext(context.Background())
 
-	a := NewApp(ctx)
+	h := New(ctx)
 
-	a.Star(ctx)
+	h.Star(ctx)
 
 	r := chi.NewRouter()
 
-	r.Post("/nearby/v1", a.FanOutReadClientHandler)
-	r.Post("/nearby/v2", a.FanOutWriteClientHandler)
+	r.Post("/nearby/v1", h.FanOutReadClientHandler)
+	r.Post("/nearby/v2", h.FanOutWriteClientHandler)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, r.RequestURI+"/pprof/", http.StatusMovedPermanently)

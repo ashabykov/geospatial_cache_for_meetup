@@ -23,16 +23,16 @@ import (
 	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_distributed_redis_cache"
 )
 
-type app struct {
+type handler struct {
 	fatOutReadClient  *fatout_read_client.Client
 	fanOutWriteClient *fanout_write_client.Client
 }
 
-func (a *app) Star(ctx context.Context) {
-	go a.fanOutWriteClient.SubscribeOnUpdates(ctx)
+func (h *handler) Star(ctx context.Context) {
+	go h.fanOutWriteClient.SubscribeOnUpdates(ctx)
 }
 
-func (a *app) FanOutReadClientHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handler) FanOutReadClientHandler(w http.ResponseWriter, r *http.Request) {
 	query := NearBy{}
 	err := json.NewDecoder(r.Body).Decode(&query)
 	if err != nil {
@@ -41,7 +41,7 @@ func (a *app) FanOutReadClientHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results, err := a.fatOutReadClient.Near(query.Location, query.Radius, query.Limit)
+	results, err := h.fatOutReadClient.Near(query.Location, query.Radius, query.Limit)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -59,7 +59,7 @@ func (a *app) FanOutReadClientHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonItem)
 }
 
-func (a *app) FanOutWriteClientHandler(w http.ResponseWriter, r *http.Request) {
+func (h *handler) FanOutWriteClientHandler(w http.ResponseWriter, r *http.Request) {
 	query := NearBy{}
 	err := json.NewDecoder(r.Body).Decode(&query)
 	if err != nil {
@@ -68,7 +68,7 @@ func (a *app) FanOutWriteClientHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results, err := a.fanOutWriteClient.Near(query.Location, query.Radius, query.Limit)
+	results, err := h.fanOutWriteClient.Near(query.Location, query.Radius, query.Limit)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -86,7 +86,7 @@ func (a *app) FanOutWriteClientHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonItem)
 }
 
-func NewApp(ctx context.Context) *app {
+func New(ctx context.Context) *handler {
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -123,7 +123,7 @@ func NewApp(ctx context.Context) *app {
 			lru_cache.New(ttl, capacity),
 		)
 	)
-	return &app{
+	return &handler{
 		fatOutReadClient:  fatout_read_client.New(geoV1),
 		fanOutWriteClient: fanout_write_client.New(sub, geoV2),
 	}
