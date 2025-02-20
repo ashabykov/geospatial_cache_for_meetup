@@ -26,7 +26,7 @@ func New(redis redis.UniversalClient, ttl time.Duration) *Cache {
 
 func (c *Cache) Set(loc location.Location) error {
 	var (
-		shardKey = loc.ShardKey()
+		shardKey = loc.GeoHash()
 		ctx      = context.Background()
 	)
 

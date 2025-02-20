@@ -66,7 +66,7 @@ func (l Location) Key() string {
 	return string(l.Name)
 }
 
-func (l Location) ShardKey() string {
+func (l Location) GeoHash() string {
 	return h3.LatLngToCell(
 		h3.NewLatLng(l.Lat.Float64(), l.Lon.Float64()), 5,
 	).String()
