@@ -121,7 +121,7 @@ func (c *Cache) Set(target location.Location) error {
 // Del removes a location from the cache, geospatial, and timestamp indexes.
 func (c *Cache) Del(target location.Location) {
 	c.geospatial.Remove(target)
-	c.timestamp.Add(target)
+	c.timestamp.Remove(target)
 	c.cache.Del(target.Key())
 }
 
