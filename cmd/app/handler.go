@@ -16,11 +16,11 @@ import (
 	"github.com/ashabykov/geospatial_cache_for_meetup/fan-out-read-client"
 	"github.com/ashabykov/geospatial_cache_for_meetup/fan-out-write-client"
 	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache"
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/kafka_broadcaster"
 	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/lru_cache"
 	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/rtree_index"
 	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/sorted_set"
 	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_distributed_redis_cache"
+	"github.com/ashabykov/geospatial_cache_for_meetup/pkg/kafka/consumer/broadcast"
 )
 
 type handler struct {
@@ -110,7 +110,7 @@ func New(ctx context.Context) *handler {
 			}),
 			ttl,
 		)
-		sub = kafka_broadcaster.NewSubscriber(
+		sub = broadcast.NewSubscriber(
 			[]string{kafkaAddr},
 			kafkaTopic,
 			partitions,

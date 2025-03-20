@@ -1,4 +1,4 @@
-package kafka_broadcaster
+package broadcast
 
 import (
 	"context"

@@ -12,7 +12,6 @@ import (
 
 	"github.com/ashabykov/geospatial_cache_for_meetup/cmd"
 	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache"
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/kafka_broadcaster"
 	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/lru_cache"
 	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/rtree_index"
 	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_client_side_cache/sorted_set"
@@ -33,7 +32,7 @@ func BenchmarkClientNear_for_FunOutWrite(b *testing.B) {
 		timeOffset    = 5 * time.Minute
 		ttl           = 20 * time.Minute
 		capacity      = 10000
-		sub           = kafka_broadcaster.NewSubscriber(
+		sub           = broadcast.NewSubscriber(
 			[]string{kafka_addr},
 			kafka_topic,
 			partitions,

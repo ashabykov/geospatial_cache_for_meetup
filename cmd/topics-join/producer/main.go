@@ -7,13 +7,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
-	"github.com/redis/go-redis/v9"
-
 	"github.com/ashabykov/geospatial_cache_for_meetup/cmd"
-	"github.com/ashabykov/geospatial_cache_for_meetup/geospatial_distributed_redis_cache"
 	"github.com/ashabykov/geospatial_cache_for_meetup/location"
 	"github.com/ashabykov/geospatial_cache_for_meetup/pkg/kafka"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -23,27 +20,20 @@ func main() {
 	}
 
 	var (
-		ctx        = cmd.WithContext(context.Background())
-		kafkaAddr  = os.Getenv("kafka_addr")
-		kafkaTopic = os.Getenv("kafka_topic")
-		redisAddr  = os.Getenv("redis_addr")
-		rps        = 1000
-		pub        = kafka.NewPublisher([]string{kafkaAddr}, kafkaTopic, rps)
-		geo        = geospatial_distributed_redis_cache.New(
-			redis.NewUniversalClient(&redis.UniversalOptions{
-				Addrs:                 []string{redisAddr},
-				ReadOnly:              false,
-				RouteByLatency:        false,
-				RouteRandomly:         true,
-				ContextTimeoutEnabled: true,
-				ConnMaxIdleTime:       170 * time.Second,
-			}),
-			10*time.Minute,
-		)
+		rps                 = 1000
+		ctx                 = cmd.WithContext(context.Background())
+		kafkaAddr           = os.Getenv("kafka_addr")
+		kafkaTopicJoinLeft  = os.Getenv("kafka_topic_join_left")
+		kafkaTopicJoinRight = os.Getenv("kafka_topic_join_right")
+		leftPub             = kafka.NewPublisher([]string{kafkaAddr}, kafkaTopicJoinLeft, rps)
+		rightPub            = kafka.NewPublisher([]string{kafkaAddr}, kafkaTopicJoinRight, rps)
 	)
 
 	defer func() {
-		if err := pub.Close(); err != nil {
+		if err := leftPub.Close(); err != nil {
+			log.Printf("Error closing publisher: %v", err)
+		}
+		if err := rightPub.Close(); err != nil {
 			log.Printf("Error closing publisher: %v", err)
 		}
 	}()
@@ -64,11 +54,11 @@ func main() {
 	for i, loc := range locations(count, radius, target) {
 		loc.Ts = location.Now()
 		loc.Name = location.Name(fmt.Sprintf("location-%d", i%100))
-		if err := pub.Publish(ctx, loc); err != nil {
+		if err := leftPub.Publish(ctx, loc); err != nil {
 			fmt.Println("Publish err:", err)
 		}
-		if err := geo.Set(loc); err != nil {
-			fmt.Println("Set err:", err)
+		if err := rightPub.Publish(ctx, loc); err != nil {
+			fmt.Println("Publish err:", err)
 		}
 	}
 
