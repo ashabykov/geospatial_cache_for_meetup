@@ -51,7 +51,7 @@ func main() {
 	var (
 
 		//
-		count  = 10000
+		count  = 100000
 		radius = float64(5000)
 		target = location.Location{
 			Name: "target",
