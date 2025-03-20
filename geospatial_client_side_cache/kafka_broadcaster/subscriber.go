@@ -74,13 +74,9 @@ func (s *Subscriber) worker(ctx context.Context, results chan<- location.Locatio
 
 	defer wg.Done()
 
-	ticker := time.NewTicker(s.timeout)
-
-	defer ticker.Stop()
-
 	for {
 		select {
-		case <-ticker.C:
+		default:
 			message, err := reader.ReadMessage(ctx)
 			if err != nil {
 				log.Println("Subscriber: read message error:", err)

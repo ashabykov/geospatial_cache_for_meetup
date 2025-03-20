@@ -61,8 +61,9 @@ func main() {
 			TTL:  10 * time.Minute,
 		}
 	)
-	for _, loc := range locations(count, radius, target) {
+	for i, loc := range locations(count, radius, target) {
 		loc.Ts = location.Now()
+		loc.Name = location.Name(fmt.Sprintf("location-%d", i%100))
 		if err := pub.Publish(ctx, loc); err != nil {
 			fmt.Println("Publish err:", err)
 		}
